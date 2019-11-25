@@ -17,10 +17,10 @@ const COOKIE_OPTIONS = {
 };
 
 const authenticate = async (email, password) => {
-    const {data } = await axios.get(`https://jsonplaceholder.typicode.com/users`);
+    const {data} = await axios.get(`https://jsonplaceholder.typicode.com/users`);
 
     return data.find(user => {
-        if(user.email === email && user.website === password) {
+        if (user.email === email && user.website === password) {
             return user;
         }
     })
@@ -35,7 +35,7 @@ app.prepare().then(() => {
     server.post('/api/login', async (req, res) => {
         const {email, password} = req.body;
         const user = await authenticate(email, password);
-        if(!user) {
+        if (!user) {
             return res.status(403).send("Inavlid email or password");
         }
 
@@ -48,6 +48,18 @@ app.prepare().then(() => {
         res.cookie('token', userData, COOKIE_OPTIONS);
 
         res.json(userData);
+    });
+
+    server.get(`/api/profile`, async (req, res) => {
+        const {signedCookies = {}} = req;
+        const {token} = signedCookies;
+        if (token && token.email) {
+            const {data} = await axios.get(`https://jsonplaceholder.typicode.com/users`);
+            const userProfile = data.find(user => user.email === token.email);
+
+            return res.json({user: userProfile});
+        }
+        res.sendStatus(404);
     });
 
     server.get('*', (req, res) => {
