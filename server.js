@@ -1,14 +1,14 @@
 const next = require('next');
 const express = require('express');
 const axios = require('axios');
-const cookiePareser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 
 const dev = process.env.NODE_ENV !== 'production';
 const port = process.env.PORT || 3000;
 const app = next({dev});
 const handle = app.getRequestHandler();
 
-const AUTH_USER_TYPE = 'autenticated';
+const AUTH_USER_TYPE = 'authenticated';
 const COOKIE_SECRET = 'sdgdh';
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -24,13 +24,13 @@ const authenticate = async (email, password) => {
             return user;
         }
     })
-}
+};
 
 app.prepare().then(() => {
     const server = express();
 
     server.use(express.json());
-    server.use(cookiePareser(COOKIE_SECRET));
+    server.use(cookieParser(COOKIE_SECRET));
 
     server.post('/api/login', async (req, res) => {
         const {email, password} = req.body;
@@ -48,6 +48,11 @@ app.prepare().then(() => {
         res.cookie('token', userData, COOKIE_OPTIONS);
 
         res.json(userData);
+    });
+
+    server.post('/api/logout', (req, res) => {
+        res.clearCookie('token', COOKIE_OPTIONS);
+        res.sendStatus(204);
     });
 
     server.get(`/api/profile`, async (req, res) => {
